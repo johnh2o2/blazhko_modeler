@@ -385,6 +385,25 @@ def _autofrequency(baseline, minimum_frequency, maximum_frequency,
 
 
 class BlazhkoPeriodogram(object):
+    """
+    Blazhko Periodogram
+
+    Searches for the most likely modulation frequency.
+
+    Parameters
+    ----------
+    t: array_like
+        Time coordinates
+    y: array_like
+        Measurements
+    dy: array_like, optional
+        Measurement uncertainties
+    show_progress: bool, optional (default: False)
+        Show a progressbar.
+    freq: float, optional (default: None)
+        Signal frequency
+
+    """
     def __init__(self, t, y, dy=None,
                  show_progress=False,
                  freq=None, **kwargs):
@@ -412,10 +431,27 @@ class BlazhkoPeriodogram(object):
                               self.freq, freq).score(only_primary=only_primary)
 
     def power(self, freqs, only_primary=False):
+        """
+        Blazhko power.
+
+        Parameters
+        ----------
+        freqs: float or array_like
+            Modulation frequency/frequencies to test
+        only_primary: bool, optional (default: False)
+            Only evaluate the score for the primary signal
+            (multi-harmonic Lomb-Scargle)
+
+        Returns
+        -------
+        powers: array_like
+            The Blazhko power for each modulation frequency
+        """
         if not isinstance(freqs, (np.ndarray, list, tuple)):
             return self._power_single_freq(freqs)
 
-        powers = np.array(list(map(lambda f: self._power_single_freq(f),
+        pow_single = lambda f: self._power_single_freq(f, only_primary=only_primary)
+        powers = np.array(list(map(pow_single,
                                    self.progress_bar(freqs))))
         return powers
 
