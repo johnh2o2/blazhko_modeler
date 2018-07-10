@@ -244,7 +244,9 @@ class BlazhkoModel(object):
 
         self.mod_reg = [1./(mean_mod_amp_prior ** 2)]
         if mod_amp_prior is not None:
-            self.mod_reg = [1./(mod_amp_prior ** 2)] * self.nharms
+            self.mod_reg += [1./(mod_amp_prior ** 2)] * self.nharms
+        else:
+            self.mod_reg += [0] * self.nharms
 
         self.V = regularization(self.nharms,
                                 self.mod_nharms,
