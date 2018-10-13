@@ -366,6 +366,20 @@ class BlazhkoModel(object):
 
         return X @ self.params
 
+    @property
+    def primary_amplitude(self):
+        t = np.linspace(0, 1./self.freq, 1000)
+        y = self.unmod(t)
+        return 0.5 * (max(y) - min(y))
+
+    @property
+    def blazhko_amplitude(self):
+        t = np.linspace(0, 1./self.blazhko_freq, 1000)
+        y = self(t)
+        a = 0.5 * (max(y) - min(y))
+        return a - self.primary_amplitude
+
+
     def unmod(self, t):
         if self.params is None:
             raise Exception("Must fit data first before calling unmod")
@@ -386,6 +400,25 @@ def _autofrequency(baseline, minimum_frequency, maximum_frequency,
     return minimum_frequency + df * np.arange(n_freqs)
 
 
+
+class SimpleBlazhkoModel(BlazhkoModel):
+    """
+    Fits only a single blazhko component at each harmonic for
+    a maximum of `nharms_blazhko` harmonics.
+
+    """
+
+    def __init__(self, nharms=7, nharms_blazhko=1):
+        mod_nharms = [1] * nharms_blazhko + (nharms - nharms_blazhko) * [0]
+
+        super().__init__(nharms=nharms,
+                         mod_nharms=mod_nharms,
+                         mean_mod_nharms=0,
+                         mod_amp_prior=None,
+                         unmod_amp_prior=None,
+                         mean_mod_amp_prior=None)
+
+
 class BlazhkoPeriodogram(object):
     """
     Blazhko Periodogram
@@ -400,24 +433,33 @@ class BlazhkoPeriodogram(object):
         Measurements
     dy: array_like, optional
         Measurement uncertainties
+    model: BlazhkoModel
+        Model to compute periodogram for
     show_progress: bool, optional (default: False)
         Show a progressbar.
+    progress_bar: callable, optional
+        Option to pass a callable `progress_bar(iterator)`
     freq: float, optional (default: None)
         Signal frequency
 
     """
     def __init__(self, t, y, dy=None,
                  show_progress=False,
+                 progress_bar=None,
+                 model=None,
                  freq=None, **kwargs):
-        self.model = BlazhkoModel(**kwargs)
+
+        self.model = model
         self.t = t
         self.y = y
         self.dy = dy
         self.freq = freq
         self.show_progress = show_progress
-        self.progress_bar = lambda x: x
-        if self.show_progress:
+        self.progress_bar = progress_bar
+        if self.show_progress and self.progress_bar is None:
             self.progress_bar = tqdm
+        elif self.progress_bar is None:
+            self.progress_bar = lambda x: x
 
         if self.dy is None:
             self.dy = np.ones_like(t)
@@ -476,11 +518,6 @@ class BlazhkoPeriodogram(object):
         return self.model.fit(self.t, self.y, self.dy,
                               self.freq, freq)
 
-    def amplitude(self, t, n):
-        pass
-
-    def phase(self, t, n):
-        pass
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
