@@ -408,15 +408,15 @@ class SimpleBlazhkoModel(BlazhkoModel):
 
     """
 
-    def __init__(self, nharms=7, nharms_blazhko=1):
+    def __init__(self, nharms=7, nharms_blazhko=1, mod_amp_prior=10, unmod_amp_prior=None):
         mod_nharms = [1] * nharms_blazhko + (nharms - nharms_blazhko) * [0]
 
         super().__init__(nharms=nharms,
                          mod_nharms=mod_nharms,
                          mean_mod_nharms=0,
-                         mod_amp_prior=None,
-                         unmod_amp_prior=None,
-                         mean_mod_amp_prior=None)
+                         mod_amp_prior=mod_amp_prior,
+                         unmod_amp_prior=unmod_amp_prior,
+                         mean_mod_amp_prior=1)
 
 
 class BlazhkoPeriodogram(object):
